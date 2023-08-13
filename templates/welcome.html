@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to the Application</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-image: url('{{ url_for("static", filename="bg.jpg") }}');
+    background-size: cover;
+    font-family: Arial, sans-serif;
+  }
+  .container {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+  .textbox {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+  }
+  .button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  .success-message {
+    color: green;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  .icon {
+    margin-top: 10px;
+    width: 150px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome To Our Application</h1>
+    <p>We're excited to have you on board!<br>Please enter your participant ID below to get started.</p>
+    <form onsubmit="submitID(event)">
+      <input type="text" class="textbox" id="participantID" placeholder="Enter your ID">
+      <button class="button" type="submit">Submit</button>
+    </form>
+    <p id="successMessage" class="success-message"></p>
+    <img src="{{ url_for('static', filename='lab.png') }}" alt="Small Picture" class="icon">
+  </div>
+
+  <script>
+    function submitID(event) {
+      event.preventDefault();
+      var participantID = document.getElementById("participantID").value;
+      fetch('/submit_id', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'participantID=' + encodeURIComponent(participantID)
+      })
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById("successMessage").textContent = "Your ID was saved successfully!";
+        setTimeout(function() {
+        window.location.href='/to_garmin';
+        }, 1500);
+      })
+      .catch(error => console.error('Error:', error));
+    }
+  </script>
+</body>
+</html>
