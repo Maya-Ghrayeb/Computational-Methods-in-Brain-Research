@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
-from flask import Flask, redirect, request, render_template
+from flask import Flask, redirect, request, render_template, make_response
 import urllib.parse
 from requests_oauthlib import OAuth1Session
 import binascii
@@ -9,13 +9,17 @@ import os
 # These would be provided by Garmin when you register your application
 from schonbergAPI import SchonbergLabAPI
 
-CLIENT_ID = '9d686456-8811-4713-bd20-56c96a51792d'
-CLIENT_SECRET = 'MsmgnsdocGWYBzho5hAxHNedDKYIcvtaRKr'
+CLIENT_ID = '221a1c5e-0925-4263-b8fa-6251f7eef7c6'
+CLIENT_SECRET = '8F0g1d0kBCfH6gdp2TU2GAM4uH5QAuEOzUx'
 REDIRECT_URI = 'http://localhost:5000/authbborization_code'
 
 # URL endpoints provided in Garmin's API documentation
 AUTHORIZATION_URL = 'https://connect.garmin.com/oauthConfirm'
 TOKEN_URL = 'https://connect.garmin.com/oauth2/token'
+
+AUTHORIZATION_TOKEN = 'oauth_token'
+AUTHORIZATION_TOKEN_SECRET = 'oauth_token'
+
 
 app = Flask(__name__)
 
@@ -29,24 +33,41 @@ def submit_id():
     global session_id
     participant_id = request.form.get('participantID')
 
-    # Create a new session for the participant and include relevant data
-    session_data = {'participant_id': participant_id}
+    consumer_key = CLIENT_ID
+    consumer_secret = CLIENT_SECRET
 
+    # Step 1: Acquire Unauthorized Request Token and Token Secret (from garmin server)
+    request_token_url = "https://connectapi.garmin.com/oauth-service/oauth/request_token"
+    oauth = OAuth1Session(consumer_key, client_secret=consumer_secret)
+
+    r = oauth.fetch_request_token(request_token_url)
+    request_token = r.get('oauth_token')
+    request_token_secret = r.get('oauth_token_secret')
+
+    # storing our request tokens for later
+    os.environ['REQUEST_TOKEN'] = request_token
+    os.environ['REQUEST_TOKEN_SECRET'] = request_token_secret
+
+    authorization_url = oauth.authorization_url(AUTHORIZATION_URL)
+
+    # Create a new session for the participant and include relevant data
+    session_data = {'participant_id': participant_id,
+                    'req_token': request_token,
+                    'req_token_secret': request_token_secret,
+                    'oauth_url': authorization_url}
     # Add the new session to the API
     new_session = api.add_new_session(data=session_data)
 
     session_id = new_session['_id']  # Get the session ID from the created session
+    response = make_response("Participant ID saved successfully!")
+    response.set_cookie('session_id', session_id, max_age=600)
 
-    # Retrieve the session data using the session ID and print the participant ID
-    retrieved_session = api.get_session_with_id(session_id)
-    print(f"Participant ID in the session: {retrieved_session['participant_id']}") # to make sure it was saved in the api
 
-    return "Participant ID saved successfully!"
+    return response
 
 
 @app.route('/first_page')
 def first_page():
-
     return render_template('welcome.html')
 
 """""
@@ -59,37 +80,12 @@ def test_page():
 """""
 
 
-@app.route("/tmp")
-def tmp():
-    collected_id = ""
-    #insert to Yonatan's Database
-    api.update_session(session_id=session_id, data={'participant_id': collected_id})
-
 @app.route('/to_garmin')
 def home():
-    params = {
-        'response_type': 'code',
-        'client_id': CLIENT_ID,
-        'redirect_uri': REDIRECT_URI,
-    }
-    consumer_key = CLIENT_ID
-    consumer_secret = CLIENT_SECRET
+    session_id = request.cookies.get('session_id')
+    session = api.get_session_with_id(session_id)
 
-    # Step 1: Acquire Unauthorized Request Token and Token Secret (from garmin server)
-    request_token_url = "https://connectapi.garmin.com/oauth-service/oauth/request_token"
-    oauth = OAuth1Session(consumer_key, client_secret=consumer_secret)
-
-    r = oauth.fetch_request_token(request_token_url)
-    request_token = r.get('oauth_token')
-    request_token_secret = r.get('oauth_token_secret')
-
-    #storing our request tokens for later
-    os.environ['REQUEST_TOKEN'] = request_token
-    os.environ['REQUEST_TOKEN_SECRET'] = request_token_secret
-
-
-
-    authorization_url = oauth.authorization_url(AUTHORIZATION_URL)
+    authorization_url = session['oauth_url']
     print(f'we redirect to this URL and authorize the app:\n{authorization_url}\n')
 
     #after we authorize, we will go to /authorization_code page automaticaly
@@ -103,16 +99,16 @@ def authorization_code():
     # The service provider has redirected the user back to this route,
     # including the oauth_verifier as a query parameter.
 
+    #get the users session
+    session_id = request.cookies.get('session_id')
+    session = api.get_session_with_id(session_id)
+
     #we get the verifier from the url
     oauth_verifier = request.args.get('oauth_verifier')
 
-    # We'll also need the request token details that we stored earlier.
-    # These could be stored in a database, or in session data if you're using sessions.
-    # In this example, we're retrieving them from environment variables.
-
     #getting our requests tokens back
-    request_token = os.environ.get('REQUEST_TOKEN')
-    request_token_secret = os.environ.get('REQUEST_TOKEN_SECRET')
+    request_token = session['req_token']
+    request_token_secret = session['req_token_secret']
 
     oauth = OAuth1Session(CLIENT_ID,
                           client_secret=CLIENT_SECRET,
@@ -123,8 +119,10 @@ def authorization_code():
     # Exchange the authorized request token for an access token
     access_token = oauth.fetch_access_token('https://connectapi.garmin.com/oauth-service/oauth/access_token')
 
-    # At this point you could store the access token details in a database for later use.
-    # For this example, we're just printing them.
+    # update the user session with the access token
+    api.update_session(session_id=session_id,
+                       data={'acc_token': access_token['oauth_token'],
+                             'acc_token_secret': access_token['oauth_token_secret']} )
     #TODO: insert acces token to database
     print(f"Access Token: {access_token['oauth_token']}")
     print(f"Access Token Secret: {access_token['oauth_token_secret']}")
@@ -132,15 +130,13 @@ def authorization_code():
     #now we can use the Health API endpoints using this token to get the users data from garmins server :)
     #I added a function that does that - just insert some endpoint address to complete the url
     # (its in the 60 pages documents)
-    early = datetime.today() - timedelta(hours=0, minutes=50)
-    request_permissions(access_token=access_token['oauth_token'],
-                 access_token_secret=access_token['oauth_token_secret'])
-    request_data("userMetrics", access_token=access_token['oauth_token'],
+    early = datetime.now(timezone.utc) - timedelta(hours=24, minutes=0)
+    some_data = request_data("stressDetails", access_token=access_token['oauth_token'],
                  access_token_secret=access_token['oauth_token_secret'],
-                 upload_start=early, upload_end=datetime.today())
-
+                 upload_start=early, upload_end=datetime.today(), is_backfill=False)
     #TODO: return the participant back to the application
-    return "Access token obtained and printed. Check your console."
+    return f"Access token obtained and printed. Here is the session: {api.get_session_with_id(session_id)}\n\n" \
+           f"Here is an example of some userData: {some_data}"
 
 
 
@@ -170,7 +166,7 @@ def request_permissions( access_token, access_token_secret):
 
 
 
-def request_data(endpoint, access_token, access_token_secret, upload_start, upload_end):
+def request_data(endpoint, access_token, access_token_secret, upload_start, upload_end, is_backfill):
     # Create an OAuth1 session
     garmin = OAuth1Session(CLIENT_ID,
                            client_secret=CLIENT_SECRET,
@@ -178,17 +174,52 @@ def request_data(endpoint, access_token, access_token_secret, upload_start, uplo
                            resource_owner_secret=access_token_secret)
 
     # Make a GET request to the Garmin Health API
-    url = f'https://apis.garmin.com/wellness-api/rest/{endpoint}'
+    if is_backfill:
+        url = f'https://apis.garmin.com/wellness-api/rest/backfill/{endpoint}'
+    else:
+        url = f'https://apis.garmin.com/wellness-api/rest/{endpoint}'
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Content-Type': 'application/json'
     }
-    params = {
-        'uploadStartTimeInSeconds': int(upload_start.timestamp()),
-        'uploadEndTimeInSeconds': int(upload_end.timestamp())
-    }
+    if is_backfill:
+        params = {
+            'summaryStartTimeInSeconds': int(upload_start.timestamp()),
+            'summaryEndTimeInSeconds': int(upload_end.timestamp())
+        }
+    else:
+        params = {
+            'uploadStartTimeInSeconds': int(upload_start.timestamp()),
+            'uploadEndTimeInSeconds':int(upload_end.timestamp())
+        }
 
     response = garmin.get(url, params=params, headers=headers)
+
+    # Print the response
+    if response.status_code == 200:
+        print(response.json())
+        return response.json()
+    else:
+        print(f"Request failed with status {response.status_code}")
+        print(response.text)
+        return response.text
+
+def request_user_information(access_token, access_token_secret, id):
+    # Create an OAuth1 session
+    garmin = OAuth1Session(CLIENT_ID,
+                           client_secret=CLIENT_SECRET,
+                           resource_owner_key=access_token,
+                           resource_owner_secret=access_token_secret)
+
+    # Make a GET request to the Garmin Health API
+    url = f'https://apis.garmin.com/wellness-api/rest/user/id'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+
+
+    response = garmin.get(url, headers=headers)
 
     # Print the response
     if response.status_code == 200:
@@ -200,13 +231,6 @@ def request_data(endpoint, access_token, access_token_secret, upload_start, uplo
 
 if __name__ == "__main__":
     app.run(debug=True)
-    print(api.get_all_sessions())
-"""""
-    session_id=api.add_new_session(data={'baloon1': '3' , 'baloon2': '5'})['_id']
-    print(session_id)
-    print(api.get_session_with_id(session_id=session_id))
-    print(api.update_session(session_id=session_id, data={'nana': 'baba'}))
-    print(api.get_all_sessions()) """
 
 
 
