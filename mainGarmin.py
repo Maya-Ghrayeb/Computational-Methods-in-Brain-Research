@@ -96,11 +96,12 @@ def home():
 
 @app.route('/authorization_code')
 def authorization_code():
+    global session_id
     # The service provider has redirected the user back to this route,
     # including the oauth_verifier as a query parameter.
 
     #get the users session
-    session_id = request.cookies.get('session_id')
+    #session_id = request.cookies.get('session_id')
     session = api.get_session_with_id(session_id)
 
     #we get the verifier from the url
