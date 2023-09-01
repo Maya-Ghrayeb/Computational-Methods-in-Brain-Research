@@ -59,9 +59,10 @@ def submit_id():
     new_session = api.add_new_session(data=session_data)
 
     session_id = new_session['_id']  # Get the session ID from the created session
+    print("here")
+    print(session_id)
     response = make_response("Participant ID saved successfully!")
     response.set_cookie('session_id', session_id, max_age=600)
-
 
     return response
 
@@ -69,15 +70,6 @@ def submit_id():
 @app.route('/first_page')
 def first_page():
     return render_template('welcome.html')
-
-"""""
-@app.route('/lets_test')
-def test_page():
-    #TODO: add welcome page for the participants - Done 
-    #TODO: after collecting the participant number and sending to database, move the user to next page. -Done
-
-    return render_template('index.html')
-"""""
 
 
 @app.route('/to_garmin')
@@ -92,16 +84,19 @@ def home():
     # (its configured in the Garmin app we set app in their site)
     return redirect(authorization_url, 302)
 
-
+stress_data=[]
 
 @app.route('/authorization_code')
 def authorization_code():
     global session_id
+    global stress_data
     # The service provider has redirected the user back to this route,
     # including the oauth_verifier as a query parameter.
 
     #get the users session
     #session_id = request.cookies.get('session_id')
+    print("1")
+    print(session_id)
     session = api.get_session_with_id(session_id)
 
     #we get the verifier from the url
@@ -131,14 +126,22 @@ def authorization_code():
     #now we can use the Health API endpoints using this token to get the users data from garmins server :)
     #I added a function that does that - just insert some endpoint address to complete the url
     # (its in the 60 pages documents)
+    #how bah dahhh
     early = datetime.now(timezone.utc) - timedelta(hours=24, minutes=0)
     some_data = request_data("stressDetails", access_token=access_token['oauth_token'],
                  access_token_secret=access_token['oauth_token_secret'],
                  upload_start=early, upload_end=datetime.today(), is_backfill=False)
+
+    print("checkk")
+
+    stress_data=list( some_data[0]['timeOffsetStressLevelValues'].values())
+    print("stress DATTTTTA ARE COMIIIN")
+    print( stress_data )
+
+
     #TODO: return the participant back to the application
     return f"Access token obtained and printed. Here is the session: {api.get_session_with_id(session_id)}\n\n" \
            f"Here is an example of some userData: {some_data}"
-
 
 
 def request_permissions( access_token, access_token_secret):
@@ -230,8 +233,8 @@ def request_user_information(access_token, access_token_secret, id):
         print(response.text)
 
 
+
 if __name__ == "__main__":
     app.run(debug=True)
-
 
 
