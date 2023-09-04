@@ -67,7 +67,7 @@ def submit_id():
     return response
 
 
-@app.route('/first_page')
+@app.route('/')
 def first_page():
     return render_template('welcome.html')
 
@@ -132,10 +132,8 @@ def authorization_code():
                  access_token_secret=access_token['oauth_token_secret'],
                  upload_start=early, upload_end=datetime.today(), is_backfill=False)
 
-    print("check")
 
-    stress_data=list( some_data[-1]['timeOffsetBodyBatteryValues'].values())
-    print("stress DATTTTTA ARE COMIIING")
+    print("stress Data:")
     print( stress_data )
 
 
