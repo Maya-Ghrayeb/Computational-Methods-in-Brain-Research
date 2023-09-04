@@ -20,6 +20,7 @@ def get_base64_graph():
     return base64.b64encode(img.read()).decode()
 
 def get_last_session_data():
+    data=[]
     # Get all sessions using the original method
     all_sessions = api.get_all_sessions()
 
@@ -51,12 +52,15 @@ def get_last_session_data():
                 some_data = request_data("stressDetails", access_token=session_data['acc_token'],
                                          access_token_secret=session_data['acc_token_secret'],
                                          upload_start=early, upload_end=datetime.today(), is_backfill=False)
-                stress_data = list(some_data[-1]['timeOffsetBodyBatteryValues'].values())
+                stress_data = list(some_data[-1]['timeOffsetStressLevelValues'].values())
+                bodyBattery_data = list(some_data[-1]['timeOffsetBodyBatteryValues'].values())
+                data.append(stress_data)
+                data.append(bodyBattery_data)
 
                 # Print the stress data for verification
                 print("Stress Data:")
                 print(stress_data)
-                return stress_data
+                return data
             else:
                 # Handle the case where data retrieval fails
                 return None
@@ -67,19 +71,40 @@ def get_last_session_data():
         # Handle the case where there are no sessions
         return None
 
-@app.route('/app')
+@app.route('/')
 def dashboard():
-    last_session_data = get_last_session_data()
+    last_session_data_stress = get_last_session_data()[0]
+    last_session_data_battery = get_last_session_data()[1]
 
-    # Create a stress data graph
-    plt.plot(last_session_data)
+
+    # Customize x-axis ticks to show specific time values for both graphs
+    x_ticks = [0, 10, 20, 30, 40, 50, 60, 70]  # These represent data points
+    x_labels = ["10:00", "10:10", "10:20", "10:30", "10:40", "10:50", "11:00", "11:10"]  # Corresponding time labels
+
+    # Create a subplot with two graphs (stress and bodyBattery)
+    plt.figure(figsize=(12, 6))
+
+    # Subplot for Stress Data
+    plt.subplot(1, 2, 1)
+    plt.plot(last_session_data_stress)
     plt.xlabel('Time')
     plt.ylabel('Stress Level')
     plt.title('Stress Data Graph')
-    stress_graph = get_base64_graph()
+    plt.xticks(x_ticks, x_labels)  # Apply custom ticks
 
-    return render_template('dashboard.html', stress_graph=stress_graph)
+    # Subplot for Body Battery Data
+    plt.subplot(1, 2, 2)
+    plt.plot(last_session_data_battery)
+    plt.xlabel('Time')
+    plt.ylabel('Body Battery Level')
+    plt.title('Body Battery Data Graph')
+    plt.xticks(x_ticks, x_labels)  # Apply custom ticks
 
+    # Save the combined graph
+    combined_graph = get_base64_graph()
+
+    # Render the template with the combined graph
+    return render_template('dashboard.html', combined_graph=combined_graph)
 
 if __name__ == '__main__':
     # Get the data from the last session
