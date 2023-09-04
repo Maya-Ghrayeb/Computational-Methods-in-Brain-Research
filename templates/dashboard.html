@@ -1,14 +1,109 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <style>
+        /* Set the background image */
+        body {
+            background-image: url("{{ url_for('static', filename='bg.jpg') }}");
+            background-size: cover; /* Cover the entire page with the background image */
+        }
+
+        /* Style for the title */
+        h1 {
+            text-align: center;
+            color: white; /* Set the title color to white */
+        }
+
+        /* Style for the lab logo */
+        #lab-logo {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            max-height: 150px; /* Adjust the max-height to make the logo smaller */
+            max-width: 150px; /* Adjust the max-width to make the logo smaller */
+        }
+
+        /* Style for the graphs' images */
+        .graph-image {
+            display: block;
+            margin: 0 auto;
+            max-width: 70%; /* Adjust the max-width to make the graphs smaller */
+        }
+
+        /* Style for the left panel */
+        .left-panel {
+            position: absolute;
+            top: 50%; /* Center vertically */
+            left: 10px;
+            transform: translateY(-50%); /* Center vertically */
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        /* Style for the labels in the left panel */
+        .panel-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 5px; /* Add padding to create space around labels */
+            cursor: pointer; /* Add pointer cursor for interactivity */
+        }
+
+        /* Style for the underlined label */
+        .panel-label.underline {
+            text-decoration: underline;
+        }
+
+        /* Style for the selected labels */
+        .selected {
+            background-color: #333 !important; /* Darker background color for selected labels */
+            color: white !important; /* White text color for selected labels */
+        }
+
+        /* Style for the clicked "Stress" label */
+        .stress-clicked {
+            background-color: darkblue !important; /* Dark blue background color for clicked "Stress" label */
+            color: white !important; /* White text color for clicked "Stress" label */
+        }
+
+        /* Style for the clicked "Body Battery" label */
+        .battery-clicked {
+            background-color: darkblue !important;
+            color: white !important; /* White text color for clicked "Body Battery" label */
+        }
+    </style>
     <!-- Your HTML head content here -->
 </head>
 <body>
-    <h1>Welcome to the Dashboard</h1>
+    <!-- Lab Logo -->
+    <img id="lab-logo" src="{{ url_for('static', filename='lab.png') }}" alt="Lab Logo">
 
-    <!-- Display the stress graph -->
-    <img src="data:image/png;base64,{{ stress_graph }}" alt="Stress Data Graph">
+    <!-- Left Panel -->
+    <div class="left-panel">
+        <div class="panel-label underline">Physiological Parameters</div>
+        <div class="panel-label" onclick="toggleLabel(this)">Stress</div>
+        <div class="panel-label" onclick="toggleLabel(this)">Body Battery</div>
+        <div class="panel-label">Sleep</div>
+        <div class="panel-label">Heart Rate</div>
+    </div>
 
-    <!-- Other content here -->
+    <!-- Title -->
+    <h1>Welcome to our Dashboard</h1>
+
+    <!-- Display the combined graph -->
+    <img class="graph-image" src="data:image/png;base64,{{ combined_graph }}" alt="Combined Data Graph">
+
+    <!-- JavaScript to add interactivity -->
+    <script>
+        // JavaScript to toggle the selected class on labels
+        function toggleLabel(label) {
+            label.classList.toggle("selected");
+            if (label.innerText === "Stress") {
+                label.classList.toggle("stress-clicked");
+            } else if (label.innerText === "Body Battery") {
+                label.classList.toggle("battery-clicked");
+            }
+        }
+    </script>
 </body>
 </html>
