@@ -1,20 +1,3 @@
-# Name: Hannah Sophie Heinrichs
-# date: 6/26/2020
-
-# A simple version of the Balloon Analog Risk Task (BART) written with PsychoPy.
-# This experiment is a computerized, laboratory-based measure that involves actual
-# risky behavior for which, similar to real-world situations, riskiness is rewarded
-# up until a point at which further riskiness results in poorer outcomes.
-# Participants complete 90 trials where they pump a balloon and obtain money.
-# With every pump a balloon wil explode with increasing probability (Lejuez et al. 2002).
-# Subject and data will be seperately stored in txt files and can be matched by subject id.
-
-# It is entirely based on:
-# Lejuez, C. W., Read, J. P., Kahler, C. W., Richards, J. B., Ramsey, S. E., Stuart, G. L., ... & Brown, R. A. (2002).
-# Evaluation of a behavioral measure of risk taking: the Balloon Analogue Risk Task (BART).
-# Journal of Experimental Psychology: Applied, 8(2), 75-84. http://dx.doi.org/10.1037/1076-898X.8.2.75
-# source: http://www.impulsivity.org/measurement/BART
-
 
 import random
 import time
