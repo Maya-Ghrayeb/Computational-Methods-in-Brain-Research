@@ -1,3 +1,5 @@
+from typing import Optional, Any, Dict
+
 from flask import Flask, render_template
 import matplotlib.pyplot as plt
 import io
@@ -5,6 +7,7 @@ import base64
 from schonbergAPI import SchonbergLabAPI
 from mainGarmin import worker_key, request_data
 from datetime import datetime, timedelta, timezone
+import matplotlib.patches as mpatches
 
 api = SchonbergLabAPI(worker_key)
 
@@ -71,6 +74,20 @@ def get_last_session_data():
         # Handle the case where there are no sessions
         return None
 
+def get_bart_data(participant_id) -> Optional[Dict[str, Any]]:
+    # Get all sessions using the original method
+    all_sessions = api.get_all_sessions()
+
+    # Check if there are any sessions
+    if all_sessions:
+        # Iterate through sessions to find the correct one
+        for session in all_sessions[::-1]:
+            if 'email' not in session or session['email'] != participant_id:
+                continue
+            return session
+        return None
+
+
 @app.route('/')
 def dashboard():
     last_session_data_stress = get_last_session_data()[0]
@@ -103,8 +120,47 @@ def dashboard():
     # Save the combined graph
     combined_graph = get_base64_graph()
 
+    # Your data
+
+    bart_data = get_bart_data('eas@ew')
+    bart_graph= None
+    if bart_data is not None:
+        # Extracting relevant data
+        trial_types = [trial['trialType'] for trial in bart_data['data']]
+        sum_of_gains = [trial['sumOfGains'] for trial in bart_data['data']]
+        clicks_amount = [trial['clicksAmount'] for trial in bart_data['data']]
+        response_times = [trial['responseTimes'] for trial in bart_data['data']]
+
+        # Plotting sum of gains over trials
+        plt.figure(figsize=(15, 5))
+        plt.subplot(1, 3, 1)
+        plt.plot(sum_of_gains, '-o')
+        plt.title("Sum of Gains over Trials")
+        plt.xlabel("Trial")
+        plt.ylabel("Sum of Gains")
+
+        # Bar plot for number of clicks, colored by trial type
+        colors = ['blue' if t == 'Pump' else 'red' for t in trial_types]
+        plt.subplot(1, 3, 2)
+        bars = plt.bar(range(len(clicks_amount)), clicks_amount, color=colors)
+        plt.title("Number of Clicks per Trial")
+        plt.xlabel("Trial")
+        plt.ylabel("Clicks Amount")
+        pump_patch = mpatches.Patch(color='blue', label='Pump')
+        cashout_patch = mpatches.Patch(color='red', label='CashOut')
+        plt.legend(handles=[pump_patch, cashout_patch])
+
+        # Box plot for response times
+        plt.subplot(1, 3, 3)
+        plt.boxplot(response_times)
+        plt.title("Response Times Distribution per Trial")
+        plt.xlabel("Trial")
+        plt.ylabel("Response Time (ms)")
+
+        bart_graph = get_base64_graph()
+
     # Render the template with the combined graph
-    return render_template('dashboard.html', combined_graph=combined_graph)
+    return render_template('dashboard.html', combined_graph=combined_graph, bart_graph=bart_graph)
 
 if __name__ == '__main__':
     # Get the data from the last session

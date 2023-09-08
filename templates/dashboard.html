@@ -80,21 +80,24 @@
 
     <!-- Left Panel -->
     <div class="left-panel">
-        <div class="panel-label underline">Physiological Parameters</div>
+        <div class="panel-label underline" onclick="garminDisplay()">Physiological Parameters</div>
+        <div class="panel-label underline" onclick="bartDisplay()">Bart Parameters</div>
         <div class="panel-label" onclick="toggleLabel(this)">Stress</div>
         <div class="panel-label" onclick="toggleLabel(this)">Body Battery</div>
         <div class="panel-label">Sleep</div>
         <div class="panel-label">Heart Rate</div>
+
     </div>
 
     <!-- Title -->
     <h1>Welcome to our Dashboard</h1>
 
     <!-- Display the combined graph -->
-    <img class="graph-image" src="data:image/png;base64,{{ combined_graph }}" alt="Combined Data Graph">
+    <img id="graphImage" class="graph-image" src="data:image/png;base64,{{ combined_graph }}" alt="Combined Data Graph">
 
     <!-- JavaScript to add interactivity -->
     <script>
+        display_bart = false;
         // JavaScript to toggle the selected class on labels
         function toggleLabel(label) {
             label.classList.toggle("selected");
@@ -103,6 +106,14 @@
             } else if (label.innerText === "Body Battery") {
                 label.classList.toggle("battery-clicked");
             }
+        }
+        function bartDisplay() {
+            gImage = document.getElementById("graphImage");
+            gImage.src = "data:image/png;base64,{{ bart_graph }}";
+        }
+        function garminDisplay() {
+            gImage = document.getElementById("graphImage");
+            gImage.src = "data:image/png;base64,{{ combined_graph }}";
         }
     </script>
 </body>
