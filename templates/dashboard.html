@@ -6,6 +6,11 @@
         body {
             background-image: url("{{ url_for('static', filename='bg.jpg') }}");
             background-size: cover; /* Cover the entire page with the background image */
+            margin: 0; /* Remove default margin */
+            padding: 0; /* Remove default padding */
+            display: flex; /* Use flexbox to center content vertically and horizontally */
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
         }
 
         /* Style for the title */
@@ -16,29 +21,22 @@
 
         /* Style for the lab logo */
         #lab-logo {
+            max-height: 150px; /* Adjust the max-height to make the logo smaller */
+            max-width: 150px; /* Adjust the max-width to make the logo smaller */
             position: absolute;
             top: 10px;
             left: 10px;
-            max-height: 150px; /* Adjust the max-height to make the logo smaller */
-            max-width: 150px; /* Adjust the max-width to make the logo smaller */
-        }
-
-        /* Style for the graphs' images */
-        .graph-image {
-            display: block;
-            margin: 0 auto;
-            max-width: 70%; /* Adjust the max-width to make the graphs smaller */
         }
 
         /* Style for the left panel */
         .left-panel {
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+            padding: 10px;
+            border-radius: 5px;
             position: absolute;
             top: 50%; /* Center vertically */
             left: 10px;
             transform: translateY(-50%); /* Center vertically */
-            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
-            padding: 10px;
-            border-radius: 5px;
         }
 
         /* Style for the labels in the left panel */
@@ -71,6 +69,33 @@
             background-color: darkblue !important;
             color: white !important; /* White text color for clicked "Body Battery" label */
         }
+
+        /* Style for the main container */
+        .main-container {
+            text-align: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold; /* Make the text bold */
+            line-height: 1.5; /* Add space between lines */
+        }
+
+        /* Style for the "Welcome" sentence with a larger font size */
+        .welcome-sentence {
+            font-size: 48px; /* Adjust the font size to your preference */
+        }
+
+        /* Style for the graph container */
+        .graph-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center content horizontally within the container */
+        }
+
+        /* Style for each graph */
+        .graph {
+            display: none; /* Initially hide all graphs */
+            margin-top: 20px; /* Add some space between graphs */
+        }
     </style>
     <!-- Your HTML head content here -->
 </head>
@@ -80,40 +105,93 @@
 
     <!-- Left Panel -->
     <div class="left-panel">
-        <div class="panel-label underline" onclick="garminDisplay()">Physiological Parameters</div>
+        <div class="panel-label underline">Physiological Parameters</div>
+        <div class="panel-label" onclick="showGraph('stress')">Stress</div>
+        <div class="panel-label" onclick="showGraph('battery')">Body Battery</div>
+        <div class="panel-label" onclick="showGraph('heart')">Heart Rate</div>
         <div class="panel-label underline" onclick="bartDisplay()">Bart Parameters</div>
-        <div class="panel-label" onclick="toggleLabel(this)">Stress</div>
-        <div class="panel-label" onclick="toggleLabel(this)">Body Battery</div>
-        <div class="panel-label">Sleep</div>
-        <div class="panel-label">Heart Rate</div>
-
     </div>
 
-    <!-- Title -->
-    <h1>Welcome to our Dashboard</h1>
 
-    <!-- Display the combined graph -->
-    <img id="graphImage" class="graph-image" src="data:image/png;base64,{{ combined_graph }}" alt="Combined Data Graph">
+    <!-- Main Container -->
+    <div class="main-container" id="main-container">
+        <!-- Content to display when showing welcome sentences -->
+        <div class="welcome-sentence">Welcome to our Dashboard</div>
+        <div>Physiological Parameters and value-based decision making task</div>
+        <div>Workshop on Computational Methods in Brain Research</div>
+    </div>
+
+
+    <!-- Graph Containers -->
+    <div id="stress-graph" class="graph">
+        <!-- Stress Graph Content Goes Here -->
+        <img class="graph-image" src="data:image/png;base64,{{ combined_graph_stress }}" alt="Stress Data Graph">
+    </div>
+
+    <div id="battery-graph" class="graph">
+        <!-- Body Battery Graph Content Goes Here -->
+        <img class="graph-image" src="data:image/png;base64,{{ combined_graph_battery }}" alt="Body Battery Data Graph">
+    </div>
+
+    <div id="heart-graph" class="graph">
+        <!-- Heart Rate Graph Content Goes Here -->
+        <img class="graph-image" src="data:image/png;base64,{{ combined_graph_heart }}" alt="Heart Rate Data Graph">
+    </div>
+
+    <div id="bart-graph" class="graph">
+        <!-- Bart Graph Content Goes Here -->
+        <img class="graph-image" src="data:image/png;base64,{{ bart_graph }}" alt="Bart Parameters Graph">
+    </div>
 
     <!-- JavaScript to add interactivity -->
     <script>
-        display_bart = false;
         // JavaScript to toggle the selected class on labels
-        function toggleLabel(label) {
-            label.classList.toggle("selected");
-            if (label.innerText === "Stress") {
-                label.classList.toggle("stress-clicked");
-            } else if (label.innerText === "Body Battery") {
-                label.classList.toggle("battery-clicked");
+        function showGraph(graphType) {
+            // Hide all graphs
+            var graphs = document.querySelectorAll('.graph');
+            for (var i = 0; i < graphs.length; i++) {
+                graphs[i].style.display = 'none';
             }
+
+            // Show the selected graph
+            document.getElementById(graphType + '-graph').style.display = 'block';
+
+            // Hide the main container when a graph is shown
+            document.getElementById('main-container').style.display = 'none';
+
+            // Remove the 'selected' class from all labels
+            var labels = document.querySelectorAll('.panel-label');
+            for (var i = 0; i < labels.length; i++) {
+                labels[i].classList.remove('selected');
+            }
+
+            // Add the 'selected' class to the clicked label
+            var clickedLabel = document.querySelector('.panel-label[onclick="showGraph(\'' + graphType + '\')"]');
+            clickedLabel.classList.add('selected');
         }
+
         function bartDisplay() {
-            gImage = document.getElementById("graphImage");
-            gImage.src = "data:image/png;base64,{{ bart_graph }}";
-        }
-        function garminDisplay() {
-            gImage = document.getElementById("graphImage");
-            gImage.src = "data:image/png;base64,{{ combined_graph }}";
+            // Hide all graphs
+            var graphs = document.querySelectorAll('.graph');
+            for (var i = 0; i < graphs.length; i++) {
+                graphs[i].style.display = 'none';
+            }
+
+            // Show the Bart graph
+            document.getElementById('bart-graph').style.display = 'block';
+
+            // Hide the main container when the Bart graph is shown
+            document.getElementById('main-container').style.display = 'none';
+
+            // Remove the 'selected' class from all labels
+            var labels = document.querySelectorAll('.panel-label');
+            for (var i = 0; i < labels.length; i++) {
+                labels[i].classList.remove('selected');
+            }
+
+            // Add the 'selected' class to the Bart label
+            var bartLabel = document.querySelector('.underline[onclick="bartDisplay()"]');
+            bartLabel.classList.add('selected');
         }
     </script>
 </body>
