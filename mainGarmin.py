@@ -85,11 +85,14 @@ def home():
     return redirect(authorization_url, 302)
 
 stress_data=[]
-
+access_token=None
+request_token_secret=None
 @app.route('/authorization_code')
 def authorization_code():
     global session_id
     global stress_data
+    global access_token
+    global request_token_secret
     # The service provider has redirected the user back to this route,
     # including the oauth_verifier as a query parameter.
 
@@ -119,10 +122,17 @@ def authorization_code():
     api.update_session(session_id=session_id,
                        data={'acc_token': access_token['oauth_token'],
                              'acc_token_secret': access_token['oauth_token_secret']} )
+
+    # Redirect to a new page with a "Thank you" message and a background image
+    return render_template('thank_you.html')
+    """""
     #TODO: insert acces token to database
     print(f"Access Token: {access_token['oauth_token']}")
     print(f"Access Token Secret: {access_token['oauth_token_secret']}")
 
+
+
+    
     #now we can use the Health API endpoints using this token to get the users data from garmins server :)
     #I added a function that does that - just insert some endpoint address to complete the url
     # (its in the 60 pages documents)
@@ -133,14 +143,14 @@ def authorization_code():
                  upload_start=early, upload_end=datetime.today(), is_backfill=False)
 
 
-    print("stress Data:")
-    print( stress_data )
+    #print("stress Data:")
+    #print( stress_data )
 
 
     #TODO: return the participant back to the application
     return f"Access token obtained and printed. Here is the session: {api.get_session_with_id(session_id)}\n\n" \
            f"Here is an example of some userData: {some_data}"
-
+"""""
 
 def request_permissions( access_token, access_token_secret):
     # Create an OAuth1 session
@@ -233,15 +243,7 @@ def request_user_information(access_token, access_token_secret, id):
 
 
 if __name__ == "__main__":
-    #app.run(debug=True)
 
-    at = '5678a339-6e00-43ce-a47c-c9f6b63912d9'
-    ats = '5VogdncTxIvBTonTFXqnHXpK7fNRJWfoSYB'
-    early = datetime.now(timezone.utc) - timedelta(hours=24, minutes=0)
-    late = datetime.now(timezone.utc) - timedelta(hours=0, minutes=0)
-    some_data = request_data("stressDetails", access_token=at,
-                             access_token_secret=ats,
-                             upload_start=early, upload_end=late, is_backfill=False)
-    print(some_data)
+    app.run(debug=True)
 
 

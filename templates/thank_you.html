@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* Set the background image */
+        body {
+            background-image: url("{{ url_for('static', filename='bg.jpg') }}");
+            background-size: cover; /* Cover the entire page with the background image */
+            margin: 0; /* Remove default margin */
+            padding: 0; /* Remove default padding */
+            display: flex; /* Use flexbox to center content vertically and horizontally */
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+            flex-direction: column; /* Stack content vertically */
+        }
+
+        /* Style for the title */
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 50px; /* Add some margin at the bottom */
+        }
+
+        /* Style for the lab logo */
+        #lab-logo {
+            display: block; /* Make the image a block element */
+            max-width: 250px; /* Adjust the maximum width as needed */
+            max-height: 250px
+            margin-top: 20px; /* Add some margin at the top of the image */
+        }
+
+        /* Additional styles for your "Thank you" message */
+        /* Customize as needed */
+    </style>
+</head>
+<body>
+    <!-- "Thank you" message and lab logo -->
+    <h1>Thank you for your participation!</h1>
+    <img src="{{ url_for('static', filename='lab.png') }}" alt="Lab Logo" id="lab-logo">
+
+    <!-- Additional content can be added as needed -->
+</body>
+</html>
