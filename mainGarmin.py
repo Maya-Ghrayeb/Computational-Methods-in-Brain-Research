@@ -246,11 +246,3 @@ if __name__ == "__main__":
 
     app.run(debug=True)
 
-    print("access token")
-    print(access_token['oauth_token'])
-    print("\n")
-    print("yoooooooooooooooooooooooooooo")
-    print("secret")
-    print(access_token['oauth_token_secret'])
-    request_permissions(access_token['oauth_token'],access_token['oauth_token_secret'])
-
