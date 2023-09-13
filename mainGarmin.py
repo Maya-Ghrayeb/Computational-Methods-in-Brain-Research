@@ -85,17 +85,19 @@ def home():
     return redirect(authorization_url, 302)
 
 stress_data=[]
-
+access_token=None
+request_token_secret=None
 @app.route('/authorization_code')
 def authorization_code():
     global session_id
     global stress_data
+    global access_token
+    global request_token_secret
     # The service provider has redirected the user back to this route,
     # including the oauth_verifier as a query parameter.
 
     #get the users session
     #session_id = request.cookies.get('session_id')
-    print("1")
     print(session_id)
     session = api.get_session_with_id(session_id)
 
@@ -119,10 +121,17 @@ def authorization_code():
     api.update_session(session_id=session_id,
                        data={'acc_token': access_token['oauth_token'],
                              'acc_token_secret': access_token['oauth_token_secret']} )
+
+    # Redirect to a new page with a "Thank you" message and a background image
+    return render_template('thank_you.html')
+    """""
     #TODO: insert acces token to database
     print(f"Access Token: {access_token['oauth_token']}")
     print(f"Access Token Secret: {access_token['oauth_token_secret']}")
 
+
+
+    
     #now we can use the Health API endpoints using this token to get the users data from garmins server :)
     #I added a function that does that - just insert some endpoint address to complete the url
     # (its in the 60 pages documents)
@@ -133,22 +142,23 @@ def authorization_code():
                  upload_start=early, upload_end=datetime.today(), is_backfill=False)
 
 
-    print("stress Data:")
-    print( stress_data )
+    #print("stress Data:")
+    #print( stress_data )
 
 
     #TODO: return the participant back to the application
     return f"Access token obtained and printed. Here is the session: {api.get_session_with_id(session_id)}\n\n" \
            f"Here is an example of some userData: {some_data}"
-
+"""""
 
 def request_permissions( access_token, access_token_secret):
+    print("1")
     # Create an OAuth1 session
     garmin = OAuth1Session(CLIENT_ID,
                            client_secret=CLIENT_SECRET,
                            resource_owner_key=access_token,
                            resource_owner_secret=access_token_secret)
-
+    print("2")
     # Make a GET request to the Garmin Health API
     url = f'https://apis.garmin.com/wellness-api/rest/user/permissions'
     headers = {
@@ -156,7 +166,7 @@ def request_permissions( access_token, access_token_secret):
         'Content-Type': 'application/json'
     }
 
-
+    print("3")
     response = garmin.get(url, headers=headers)
 
     # Print the response
@@ -233,6 +243,14 @@ def request_user_information(access_token, access_token_secret, id):
 
 
 if __name__ == "__main__":
+
     app.run(debug=True)
 
+    print("access token")
+    print(access_token['oauth_token'])
+    print("\n")
+    print("yoooooooooooooooooooooooooooo")
+    print("secret")
+    print(access_token['oauth_token_secret'])
+    request_permissions(access_token['oauth_token'],access_token['oauth_token_secret'])
 
