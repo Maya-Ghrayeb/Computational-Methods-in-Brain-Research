@@ -9,8 +9,8 @@ import os
 # These would be provided by Garmin when you register your application
 from schonbergAPI import SchonbergLabAPI
 
-CLIENT_ID = '221a1c5e-0925-4263-b8fa-6251f7eef7c6'
-CLIENT_SECRET = '8F0g1d0kBCfH6gdp2TU2GAM4uH5QAuEOzUx'
+CLIENT_ID = '3ebef6f7-b3a1-4314-ae00-1b5904ac4f4d'
+CLIENT_SECRET = 'tTjxcb8rhH4UWaCBhxyuS02G803GJSapYem'
 REDIRECT_URI = 'http://localhost:5000/authbborization_code'
 
 # URL endpoints provided in Garmin's API documentation
@@ -233,6 +233,15 @@ def request_user_information(access_token, access_token_secret, id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    #app.run(debug=True)
+
+    at = '5678a339-6e00-43ce-a47c-c9f6b63912d9'
+    ats = '5VogdncTxIvBTonTFXqnHXpK7fNRJWfoSYB'
+    early = datetime.now(timezone.utc) - timedelta(hours=24, minutes=0)
+    late = datetime.now(timezone.utc) - timedelta(hours=0, minutes=0)
+    some_data = request_data("stressDetails", access_token=at,
+                             access_token_secret=ats,
+                             upload_start=early, upload_end=late, is_backfill=False)
+    print(some_data)
 
 

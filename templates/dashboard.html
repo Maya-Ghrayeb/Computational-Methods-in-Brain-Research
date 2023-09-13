@@ -95,6 +95,10 @@
         .graph {
             display: none; /* Initially hide all graphs */
             margin-top: 20px; /* Add some space between graphs */
+             position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
     <!-- Your HTML head content here -->
@@ -125,22 +129,22 @@
     <!-- Graph Containers -->
     <div id="stress-graph" class="graph">
         <!-- Stress Graph Content Goes Here -->
-        <img class="graph-image" src="data:image/png;base64,{{ combined_graph_stress }}" alt="Stress Data Graph">
+        <img class="graph-image" src="data:image/png;base64,{{ combined_graph_stress }}"  width="850" height="600" alt="Stress Data Graph">
     </div>
 
     <div id="battery-graph" class="graph">
         <!-- Body Battery Graph Content Goes Here -->
-        <img class="graph-image" src="data:image/png;base64,{{ combined_graph_battery }}" alt="Body Battery Data Graph">
+        <img class="graph-image" src="data:image/png;base64,{{ combined_graph_battery }}" width="850" height="600" alt="Body Battery Data Graph">
     </div>
 
     <div id="heart-graph" class="graph">
         <!-- Heart Rate Graph Content Goes Here -->
-        <img class="graph-image" src="data:image/png;base64,{{ combined_graph_heart }}" alt="Heart Rate Data Graph">
+        <img class="graph-image" src="data:image/png;base64,{{ combined_graph_heart }}" width="850" height="600" alt="Heart Rate Data Graph">
     </div>
 
     <div id="bart-graph" class="graph">
         <!-- Bart Graph Content Goes Here -->
-        <img class="graph-image" src="data:image/png;base64,{{ bart_graph }}" alt="Bart Parameters Graph">
+        <img class="graph-image" src="data:image/png;base64,{{ bart_graph }}" width="850" height="360" alt="Bart Parameters Graph">
     </div>
 
     <!-- JavaScript to add interactivity -->
